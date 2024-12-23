@@ -1,0 +1,13 @@
+// Test sintactico
+inicio
+	a := 3;
+	imprime "Hola mundo";
+	imprime a - 2 + 10 * 3 / 5;
+	imprime 2 + 4 * (5 + 3);
+	
+	a := 3;
+	b -= (a + 3) * 3 / (d - 2);
+	c := b + 4 ^^ 4 / 2;
+	imprime c;
+	
+fin

@@ -1,0 +1,163 @@
+package sintactico;
+import lexico.Yylex;
+import java.io.FileReader;
+import java.lang.Math;
+
+action code{:
+	NewHashMap variables = new NewHashMap();
+	boolean output = false;
+:}
+
+parser code{:
+   public static void main(String args[]) throws Exception {
+		      parser p = new parser(new Yylex(new FileReader(args[0])));      
+		      System.out.println("\n Análisis sintáctico: ");
+		      System.out.println("-----------------------------------------\n");
+		      p.parse();
+    } // End Main
+                            
+	public parser (java.io.Reader input) { super(new lexico.Yylex(input)); }
+:}
+
+/* Declaracion de variables */
+non terminal PROGRAMA, BLOQUE, INSTRUCCION, IMPRIMIR;
+non terminal Double EXPRESION, FACTOR, TERMINO, RAIZ;
+non terminal LOGICO;
+
+/* Declaracion de terminales */
+terminal inicio, fin;
+terminal imprime, finSent;
+terminal mas, menos, por, entre, asigna;
+terminal Double real, entero;
+terminal String cadena, var;
+terminal abre_parentesis, cierra_parentesis;
+terminal iguala;
+terminal mayor, menor;
+terminal substra, raiz;
+
+start with PROGRAMA; // start with sirve para indicarle al parser con que produccion empezar
+
+/* PROGRAMA -> BLOQUE */
+PROGRAMA::=	inicio  BLOQUE fin		
+			{: if (output) System.out.println("\tSINT: PROGRAMA <- inicio BLOQUE fin"); :} 
+		 	| inicio fin 
+		 	{: if (output) System.out.println("\tSINT: PROGRAMA <- inicio fin"); :} 
+			;
+
+/* BLOQUE -> BLOQUE INSTRUCCION | INSTRUCCION */
+BLOQUE ::=	BLOQUE INSTRUCCION	
+			{: if (output) System.out.println("\tSINT: BLOQUE <- BLOQUE INSTRUCCION"); :} 
+			| INSTRUCCION		
+			{: if (output) System.out.println("\tSINT: BLOQUE <- INSTRUCCION"); :} 
+			;
+
+/* INSTRUCCION -> IMPRIMIR  */
+INSTRUCCION ::=	IMPRIMIR 	
+				{: 
+					if (output) System.out.println("\tSINT: INSTRUCCION <- IMPRIMIR"); 
+			   	:} 
+			   	| var:v asigna EXPRESION:e finSent
+			   	{:
+			   		if (output) System.out.println("\tSINT: INSTRUCCION <- var asigna EXPRESION finSent");
+			   		variables.put(v,e);
+			   	:}
+			   	| var:v1 substra EXPRESION:e1 finSent
+				{:
+					if (output) System.out.println("\tSINT: INSTRUCCION <- var substra EXPRESION"); 
+					RESULT = variables.get(v1) - e1;
+				:}
+				;
+			
+/* IMPRIMIR -> imprime EXPRESION finSent | imprime cadena finSent */
+IMPRIMIR ::= imprime EXPRESION:e finSent
+			{: 
+				if (output) System.out.println("\tSINT: IMPRIMIR <- imprime EXPRESION finSent"); 
+				System.out.println(e);
+			:}
+			| imprime cadena:c finSent
+			{: 
+				if (output) System.out.println("\tSINT: IMPRIMIR <- imprime cadena finSent"); 
+				System.out.println(c);
+			:}
+			| imprime LOGICO:l finSent
+			{: 
+				if (output) System.out.println("\tSINT: IMPRIMIR <- imprime LOGICO finSent"); 
+				System.out.println(l);
+			:}
+			;	
+
+LOGICO ::=	EXPRESION:e1 iguala EXPRESION:e2	{:
+					if (output) System.out.println("\tSINT: LOGICO <- EXPRESION iguala EXPRESION");
+					RESULT = e1.equals(e2);							
+				:}
+				| EXPRESION:e1 mayor EXPRESION:e2	{:
+					if (output) System.out.println("\tSINT: LOGICO <- EXPRESION mayor EXPRESION");
+					RESULT = e1 > e2;
+                :}
+                
+				| EXPRESION:e1 menor EXPRESION:e2	{:
+					if (output) System.out.println("\tSINT: LOGICO <- EXPRESION menor EXPRESION");
+					RESULT = e1 < e2;
+                :}
+				;
+
+/* EXPRESION -> EXPRESION mas RAIZ | EXPRESION menos RAIZ | RAIZ */
+EXPRESION ::=	EXPRESION:e mas RAIZ:r	{:
+					if (output) System.out.println("\tSINT: EXPRESION <- EXPRESION mas RAIZ");
+					RESULT = e + r;							
+				:}
+				| EXPRESION:e menos RAIZ:r	{:
+					if (output) System.out.println("\tSINT: EXPRESION <- EXPRESION menos RAIZ");
+					RESULT = e - r;
+                :}
+				| RAIZ:r {: 
+					if (output) System.out.println("\tSINT: EXPRESION <- RAIZ"); 
+					RESULT = r;
+				:}
+				;
+
+/* RAIZ -> FACTOR raiz FACTOR | TERMINO */		
+RAIZ ::=	FACTOR:f1 raiz TERMINO:t2	{:
+					if (output) System.out.println("\tSINT: RAIZ <- FACTOR raiz TERMINO");
+					RESULT = Math.pow(f1,1/t2);							
+				:}
+				| TERMINO:t {: 
+					if (output) System.out.println("\tSINT: RAIZ <- TERMINO"); 
+					RESULT = t;
+				:}
+				;				
+				
+/* TERMINO -> TERMINO por EXPRESION | TERMINO entre EXPRESION | FACTOR */
+TERMINO ::=	TERMINO:t por FACTOR:e	{:
+					if (output) System.out.println("\tSINT: TERMINO <- TERMINO por FACTOR"); 	
+					RESULT = t * e;							
+				:}
+				| TERMINO:t entre FACTOR:e	{:
+					if (output) System.out.println("\tSINT: TERMINO <- TERMINO entre FACTOR");
+					RESULT = t / e;
+                :}
+                | FACTOR:f	{:
+					if (output) System.out.println("\tSINT: TERMINO <- FACTOR");
+					RESULT = f;
+                :}
+				;
+
+/* FACTOR -> entero | real */
+FACTOR ::=	entero:e	{: 
+				if (output) System.out.println("\tSINT: FACTOR <- entero"); 
+				RESULT = e;
+			:}
+			| real:r	{: 
+				if (output) System.out.println("\tSINT: FACTOR <- real"); 
+				RESULT = r;
+			:}
+			| abre_parentesis EXPRESION:e cierra_parentesis {:
+                	if (output) System.out.println("\tSINT: TERMINO <- abre_parentesis EXPRESION cierra_parentesis");
+					RESULT = (e);
+                :}
+			| var:v
+			{:
+				if (output) System.out.println("\tSINT: FACTOR <- var"); 
+				RESULT = variables.get(v);
+			:}
+			;

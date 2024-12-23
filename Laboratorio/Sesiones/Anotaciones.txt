@@ -1,0 +1,21 @@
+[a-z] {System.out.print(" Aes")};} 							// Con los [] y en medio un -, declaramos un rango entre dos cosas. Sin el - es equivalente a (a|b|c|...|z)
+[a-zA-Z] {System.out.print(" Aes")};} 							// Con los [] y en medio un -, declaramos un rango entre dos cosas. Sin el - es equivalente a (a|b|c|...|z|A|...|Z)
+[^;,.*+] {System.out.print(" Aes")};}						// Detecta cualquier cosa EXCEPTO (determinado a partir de la derecha del ^) ...
+															// LOS CORCHETES SOLO PARA RANGOS Y PARA "EXCEPCIONES" EN LA BÚSQYEDA DE ALGO
+[aqm] {System.out.print(" Aes");}							// Equivalente a (a|q|m)
+
+
+
+LETRA = [a-zA-Z]									// macro que detecta cualquier letra
+DIGITO = [0-9]										// macro que detecta cualquier dígito
+ALFANUM = ({LETRA}|{DIGITO})								// macro que detecta o letra o número
+										// CON LAS LLAVES EXPANDIMOS UNA MACRO
+{ALFANUM}+ {System.out.print(" Alfanumérico");}				// uso de una macro (USAMOS EL + PARA QUE SE EJECUTE UNA SOLA VEZ EN EL CASO DE ENCONTRARNOS CON UN CASO COMO: asdadad153da1d3)
+
+
+UO = [uU][oO]
+
+UO = [uU][oO]{DIGITOS}{DIGITOS}{DIGITOS}{DIGITOS}{DIGITOS}?{DIGITOS}? = [uU][oO]{DIGITOS}{4}	// las llaves se pueden usar para indicar repeticiones, repite lo que está a su izquierda tantas veces como número que esté dentro de las llaves
+
+UO = [uU][oO]{DIGITOS}{DIGITOS}{DIGITOS}{DIGITOS}{DIGITOS}?{DIGITOS}? = [uU][oO]{DIGITOS}{4,6}	// también se puede indicar un número de repeticiones en un rango
+

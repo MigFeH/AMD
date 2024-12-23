@@ -1,0 +1,125 @@
+package sintactico;
+import lexico.Yylex;
+import java.io.FileReader;
+
+action code{:
+	NewHashMap variables = new NewHashMap();
+	boolean output = false;
+:}
+
+parser code{:
+   public static void main(String args[]) throws Exception {
+		      parser p = new parser(new Yylex(new FileReader(args[0])));      
+		      System.out.println("\n AnÃ¡lisis sintÃ¡ctico: ");
+		      System.out.println("-----------------------------------------\n");
+		      p.parse();
+    } // End Main
+                            
+	public parser (java.io.Reader input) { super(new lexico.Yylex(input)); }
+:}
+
+/* Declaracion de variables */
+non terminal PROGRAMA, BLOQUE, INSTRUCCION, IMPRIMIR;
+non terminal Double EXPRESION, FACTOR, TERMINO;
+
+/* Declaracion de terminales */
+terminal inicio, fin;
+terminal imprime, finSent;
+terminal mas, menos, por, entre, asigna;
+terminal Double real, entero;
+terminal String cadena, var;
+terminal abre_parentesis, cierra_parentesis;
+
+start with PROGRAMA; // start with sirve para indicarle al parser con que produccion empezar
+
+/* PROGRAMA -> BLOQUE */
+PROGRAMA::=	inicio  BLOQUE fin		
+			{: if (output) System.out.println("\tSINT: PROGRAMA <- inicio BLOQUE fin"); :} 
+		 	| inicio fin 
+		 	{: if (output) System.out.println("\tSINT: PROGRAMA <- inicio fin"); :} 
+			;
+
+/* BLOQUE -> BLOQUE INSTRUCCION | INSTRUCCION */
+BLOQUE ::=	BLOQUE INSTRUCCION	
+			{: if (output) System.out.println("\tSINT: BLOQUE <- BLOQUE INSTRUCCION"); :} 
+			| INSTRUCCION		
+			{: if (output) System.out.println("\tSINT: BLOQUE <- INSTRUCCION"); :} 
+			;
+
+/* INSTRUCCION -> IMPRIMIR  */
+INSTRUCCION ::=	IMPRIMIR 	
+				{: 
+					if (output) System.out.println("\tSINT: INSTRUCCION <- IMPRIMIR"); 
+			   	:} 
+			   	| var:v asigna EXPRESION:e finSent
+			   	{:
+			   		if (output) System.out.println("\tSINT: INSTRUCCION <- var asigna EXPRESION finSent");
+			   		variables.put(v,e);
+			   	:}
+				;
+			
+/* IMPRIMIR -> imprime EXPRESION finSent | imprime cadena finSent */
+IMPRIMIR ::= imprime EXPRESION:e finSent
+			{: 
+				if (output) System.out.println("\tSINT: IMPRIMIR <- imprime EXPRESION finSent"); 
+				System.out.println(e);
+			:}
+			| imprime cadena:c finSent
+			{: 
+				if (output) System.out.println("\tSINT: IMPRIMIR <- imprime cadena finSent"); 
+				System.out.println(c);
+			:}
+			;
+				
+
+/* EXPRESION -> EXPRESION mas TERMINO | EXPRESION menos TERMINO | TERMINO */
+EXPRESION ::=	EXPRESION:e mas TERMINO:t	{:
+					if (output) System.out.println("\tSINT: EXPRESION <- EXPRESION mas TERMINO");
+					RESULT = e + t;							
+				:}
+				| EXPRESION:e menos TERMINO:t	{:
+					if (output) System.out.println("\tSINT: EXPRESION <- EXPRESION menos TERMINO");
+					RESULT = e - t;
+                :}
+                
+				| TERMINO:t {: 
+					if (output) System.out.println("\tSINT: EXPRESION <- TERMINO"); 
+					RESULT = t;
+					:}
+				;
+				
+				
+/* TERMINO -> TERMINO por EXPRESION | TERMINO entre EXPRESION | abre_parentesis EXPRESION:e cierra_parentesis | FACTOR */
+TERMINO ::=	TERMINO:t por FACTOR:e	{:
+					if (output) System.out.println("\tSINT: TERMINO <- TERMINO por EXPRESION"); 	
+					RESULT = t * e;							
+				:}
+				| TERMINO:t entre FACTOR:e	{:
+					if (output) System.out.println("\tSINT: TERMINO <- TERMINO entre EXPRESION");
+					RESULT = t / e;
+                :}
+                | FACTOR:f	{:
+					if (output) System.out.println("\tSINT: TERMINO <- FACTOR");
+					RESULT = f;
+                :}
+				;
+
+/* FACTOR -> entero | real */
+FACTOR ::=	entero:e	{: 
+				if (output) System.out.println("\tSINT: FACTOR <- entero"); 
+				RESULT = e;
+			:}
+			| real:r	{: 
+				if (output) System.out.println("\tSINT: FACTOR <- real"); 
+				RESULT = r;
+			:}
+			| abre_parentesis EXPRESION:e cierra_parentesis {:
+                	if (output) System.out.println("\tSINT: TERMINO <- abre_parentesis EXPRESION cierra_parentesis");
+					RESULT = (e);
+                :}
+			| var:v
+			{:
+				if (output) System.out.println("\tSINT: FACTOR <- var"); 
+				RESULT = variables.get(v);
+			:}
+			;
