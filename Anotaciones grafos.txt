@@ -1,0 +1,6 @@
+El grado de un vértice en un multigrafo los bucles cuentan x2.
+
+
+Un grafo simple tiene como máximo un arco entre cada par de 
+vértices, mientras que si el grafo no es simple, 
+entre dos vértices podría haber más de un arco.
